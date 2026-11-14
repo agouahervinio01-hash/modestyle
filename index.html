@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4f46e5">
+  <title>HERVINIO SHOP - Mode & Chaussures</title>
+  <!-- Lien pour transformer le site en application installable sur mobile -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+
+  <!-- =========================================================
+       ÉCRAN 1 : CONNEXION & INSCRIPTION (Bloque l'accès au site)
+  ========================================================== -->
+  <section id="authScreen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">HERVINIO <span>SHOP</span></div>
+      <p class="auth-subtitle">Connectez-vous ou créez un compte pour accéder à la boutique.</p>
+
+      <!-- Onglets Connexion / Inscription -->
+      <div class="auth-tabs">
+        <button id="tabLogin" class="auth-tab active" onclick="switchAuthTab('login')">Se connecter</button>
+        <button id="tabRegister" class="auth-tab" onclick="switchAuthTab('register')">Créer un compte</button>
+      </div>
+
+      <!-- FORMULAIRE DE CONNEXION -->
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="input-group">
+          <label>Email ou Numéro de téléphone</label>
+          <input type="text" id="loginIdentifier" placeholder="ex: hervinio@mail.com ou 0700000000" required>
+        </div>
+        <div class="input-group">
+          <label>Mot de passe</label>
+          <input type="password" id="loginPassword" placeholder="Votre mot de passe" required>
+        </div>
+        <p id="loginError" class="error-msg"></p>
+        <button type="submit" class="auth-submit-btn">Accéder à la boutique</button>
+      </form>
+
+      <!-- FORMULAIRE D'INSCRIPTION (Caché par défaut) -->
+      <form id="registerForm" style="display: none;" onsubmit="handleRegister(event)">
+        <div class="input-group">
+          <label>Nom complet</label>
+          <input type="text" id="regName" placeholder="Ex: Jean Kouassi" required>
+        </div>
+        <div class="input-group">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="exemple@email.com" required>
+        </div>
+        <div class="input-group">
+          <label>Numéro de téléphone</label>
+          <input type="tel" id="regPhone" placeholder="Ex: 0701020304" required>
+        </div>
+        <div class="input-group">
+          <label>Mot de passe</label>
+          <input type="password" id="regPassword" placeholder="Minimum 4 caractères" minlength="4" required>
+        </div>
+        <p id="regError" class="error-msg"></p>
+        <button type="submit" class="auth-submit-btn">Créer mon compte et entrer</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- =========================================================
+       ÉCRAN 2 : L'APPLICATION BOUTIQUE (Cachée tant que non connecté)
+  ========================================================== -->
+  <div id="shopApp" style="display: none;">
+
+    <!-- BARRE DE NAVIGATION -->
+    <header class="navbar">
+      <div class="logo">HERVINIO <span>SHOP</span></div>
+
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Rechercher (basket, robe, montre...)">
+      </div>
+
+      <div class="nav-actions">
+        <span id="userGreeting" class="user-badge">👤 Client</span>
+        <button class="cart-btn" onclick="toggleCart()">
+          🛒 <span id="cartCount">0</span>
+        </button>
+        <button class="logout-btn" onclick="logout()" title="Se déconnecter">Quitter</button>
+      </div>
+    </header>
+
+    <!-- BANNIÈRE PRINCIPALE -->
+    <section class="hero">
+      <h1>Bienvenue chez HERVINIO SHOP</h1>
+      <p>Le meilleur de la mode, des chaussures et des accessoires livré chez vous.</p>
+    </section>
+
+    <!-- FILTRES PAR CATÉGORIE -->
+    <section class="filters">
+      <button class="filter-btn active" onclick="filterCategory('tout', this)">Tout (12)</button>
+      <button class="filter-btn" onclick="filterCategory('vetements', this)">Vêtements</button>
+      <button class="filter-btn" onclick="filterCategory('chaussures', this)">Chaussures</button>
+      <button class="filter-btn" onclick="filterCategory('accessoires', this)">Accessoires</button>
+    </section>
+
+    <!-- GRILLE DES PRODUITS -->
+    <main class="products-container" id="productsGrid"></main>
+
+    <!-- BARRE DE NAVIGATION MOBILE EN BAS (Style Application Native) -->
+    <nav class="bottom-nav">
+      <button onclick="window.scrollTo({top:0, behavior:'smooth'})">🏠 Accueil</button>
+      <button onclick="document.getElementById('searchInput').focus()">🔍 Rechercher</button>
+      <button onclick="toggleCart()">🛒 Panier (<span id="mobileCartCount">0</span>)</button>
+      <button onclick="logout()">🚪 Déconnexion</button>
+    </nav>
+
+    <!-- TIROIR LATÉRAL DU PANIER -->
+    <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+    <aside class="cart-drawer" id="cartDrawer">
+      <div class="cart-header">
+        <h2>Mon Panier</h2>
+        <button class="close-btn" onclick="toggleCart()">✕</button>
+      </div>
+
+      <div class="cart-items" id="cartItems">
+        <p class="empty-msg">Votre panier est vide.</p>
+      </div>
+
+      <div class="cart-footer">
+        <div class="total-row">
+          <span>Total à payer :</span>
+          <span id="cartTotal">0 FCFA</span>
+        </div>
+        <button class="checkout-btn" onclick="openPaymentModal()">Passer au paiement</button>
+      </div>
+    </aside>
+
+    <!-- FENÊTRE MODALE DE PAIEMENT -->
+    <div class="payment-modal" id="paymentModal">
+      <div class="payment-box">
+        <div class="payment-header">
+          <h2>Paiement Sécurisé</h2>
+          <button class="close-btn" onclick="closePayment()">✕</button>
+        </div>
+
+        <div class="payment-summary">
+          Total commande : <strong id="modalTotal">0 FCFA</strong>
+        </div>
+
+        <form id="paymentForm" onsubmit="confirmOrder(event)">
+          <label class="section-label">1. Adresse de livraison</label>
+          <input type="text" id="deliveryAddress" placeholder="Ville, Commune, Quartier précis" required class="pay-input">
+
+          <label class="section-label">2. Choisissez votre moyen de paiement</label>
+          <div class="payment-grid">
+            <label class="pay-card wave">
+              <input type="radio" name="payMethod" value="Wave" checked onchange="togglePaymentFields()">
+              <span>🌊 Wave</span>
+            </label>
+
+            <label class="pay-card orange">
+              <input type="radio" name="payMethod" value="Orange Money" onchange="togglePaymentFields()">
+              <span>🟠 Orange Money</span>
+            </label>
+
+            <label class="pay-card mtn">
+              <input type="radio" name="payMethod" value="MTN Money" onchange="togglePaymentFields()">
+              <span>🟡 MTN Money</span>
+            </label>
+
+            <label class="pay-card moov">
+              <input type="radio" name="payMethod" value="Moov Money" onchange="togglePaymentFields()">
+              <span>🔵 Moov Money</span>
+            </label>
+
+            <label class="pay-card credit-card full-span">
+              <input type="radio" name="payMethod" value="Carte de Crédit" onchange="togglePaymentFields()">
+              <span>💳 Carte de Crédit (Visa / Mastercard)</span>
+            </label>
+          </div>
+
+          <!-- Champs Mobile Money (Wave, Orange, MTN, Moov) -->
+          <div id="mobileMoneyFields">
+            <label class="section-label" id="mobileLabel">Numéro Wave :</label>
+            <input type="tel" id="mobilePhone" placeholder="Ex: 07 00 00 00 00" class="pay-input">
+          </div>
+
+          <!-- Champs Carte de Crédit (Cachés par défaut) -->
+          <div id="creditCardFields" style="display: none;">
+            <label class="section-label">Informations de la carte :</label>
+            <input type="text" id="cardHolder" placeholder="Nom sur la carte" class="pay-input">
+            <input type="text" id="cardNumber" placeholder="Numéro de carte (16 chiffres)" maxlength="16" class="pay-input">
+            <div class="card-row">
+              <input type="text" id="cardExpiry" placeholder="MM/AA" maxlength="5" class="pay-input">
+              <input type="text" id="cardCvv" placeholder="CVV (3 chiffres)" maxlength="3" class="pay-input">
+            </div>
+          </div>
+
+          <button type="submit" class="confirm-pay-btn">Valider et Payer maintenant</button>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="style2.js"></script>
+</body>
+</html>
